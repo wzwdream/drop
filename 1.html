@@ -1,0 +1,268 @@
+<!--
+ * @Author: wzw
+ * @Date: 2021-12-23 09:33:17
+ * @Description: 
+ * @FilePath: \drop\1.html
+ * 代码是写出来给人看的，附带能在机器上运行。
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style lang="css">
+    * {
+      margin: 0px;
+      padding: 0px;
+    }
+    /* 整体盒子 */
+    .main {
+      width: 456px;
+      height: 452px;
+      overflow: hidden;
+      position: relative;
+      margin: 100px auto;
+      background: #f7f6f6;
+    }
+    /* 文件上传盒子 */
+    .drop-box {
+      width: 454px;
+      height: 450px;
+      border: 1px dashed #a89b9b;
+      overflow: hidden;
+      overflow-y: auto;
+    }
+    /*滚动条样式*/
+    .drop-box::-webkit-scrollbar {
+      width: 4px;    
+    }
+    .drop-box::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+      background: rgba(0,0,0,0.2);
+    }
+    .drop-box::-webkit-scrollbar-track {
+      -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+      border-radius: 0;
+      background: rgba(0,0,0,0.1);
+    }
+    /* 单个文件 */
+    .drop-box > div {
+      width: 144px;
+      height: 170px;
+      margin: 1px 3px;
+      display: inline-block;
+      position: relative;
+    }
+    /* 缩略图 */
+    .drop-box > div > img {
+      width: 100%;
+      height: 145px;
+    }
+    /* 删除按钮 */
+    .drop-box > div > div {
+      position: absolute;
+      right: 5px;
+      top: 5px;
+      width: 20px;
+      height: 20px;
+      background: #347aa5;
+      color: red;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 18px;
+      /* font-weight: bold; */
+      font-size: 25px;
+      cursor: pointer;
+    }
+    /* 文件名 */
+    .drop-box > div > p {
+      text-align: center;
+      width: 100%;
+      height: 25px;
+      line-height: 25px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    /* 提示文字 */
+    .drop-text {
+      position: absolute;
+      width: 450px;
+      height: 50px;
+      top: 200px;
+      text-align: center;
+      line-height: 50px;
+      opacity: 0.3;
+    }
+    /* 点击上传字体 */
+    .drop-text > span {
+      color: #347aa5;
+      cursor: pointer;
+    }
+  </style>
+  <body>
+    <div class="main">
+      <p class="drop-text">拖拽文件到此上传文件/<span onclick="upload()">点击上传</span></p>
+      <div id="drop" class="drop-box">
+      </div>
+    </div>
+    <input id="fileInput" style="display: none;" type="file">
+    <script>
+      // 获取dom元素
+      let fileInput = document.getElementById('fileInput')
+      let droptarget = document.getElementById("drop")
+      // 文件流数组
+      let fileBlodArr = []
+      // 文件数组
+      let fileArr = []
+      // 删除文件操作
+      droptarget.addEventListener('click', event => {
+        if (event.target.id.indexOf('file-') > -1) {
+          // 清空整个文件上传盒子
+          droptarget.innerHTML = ''
+          // 删除文件数组中对应的数据
+          fileArr.splice(event.target.id.split('-')[1] - 1, 1)
+          // 清空文件流数组
+          fileBlodArr = []
+          // 重新生成文件上传盒子
+          fileArr.map(item => {
+            filesToBlod(item)
+          })
+        }
+      })
+      // 文件处理函数
+      function filesToBlod(file) {
+        // 创建文件对象
+        reader = new FileReader()
+        // 文件转为文件流
+        reader.readAsDataURL(file)
+        // 文件读取
+        reader.onload = e => {
+          // 把文件流放入文件流数组中
+          fileBlodArr.push(e.target.result)
+          // 创建单个文件
+          let fileDiv = document.createElement('div')
+          // 删除按钮
+          let removeDiv = document.createElement('div')
+          removeDiv.id = 'file' + '-' + fileBlodArr.length
+          removeDiv.innerHTML = '×'
+          // 文件名
+          let fileName = document.createElement('p')
+          fileName.innerHTML = file.name
+          fileName.title = file.name
+          // 缩略图-图片直接展示,其他文件根据文件类型展示不同的缩略图
+          let img = document.createElement('img')
+          if (/image/.test(file.type)) {
+            img.src = e.target.result
+          } else {
+            switch(file.type) {
+              case 'application/msword' :
+                img.src = './static/image/word.png'
+                break
+              case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
+                img.src = './static/image/word.png'
+                break
+              case 'application/vnd.ms-powerpoint': 
+                img.src = './static/image/ppt.png'
+                break
+              case 'application/vnd.openxmlformats-officedocument.presentationml.presentation': 
+                img.src = './static/image/ppt.png'
+                break
+              case 'application/vnd.ms-excel': 
+                img.src = './static/image/excel.png'
+                break
+              case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 
+                img.src = './static/image/excel.png'
+                break
+              case 'application/pdf':
+                img.src = './static/image/pdf.png'
+                break
+              case 'text/plain':
+                img.src = './static/image/txt.png'
+                break
+              case 'text/javascript':
+                img.src = './static/image/js.png'
+                break
+              case 'text/html':
+                img.src = './static/image/html.png'
+              case 'text/css':
+                img.src = './static/image/css.png'
+                break
+              default: 
+                img.src = './static/image/other.png'
+            }
+          }
+          // 组合单个文件并放入dom中
+          fileDiv.appendChild(img)
+          fileDiv.appendChild(removeDiv)
+          fileDiv.appendChild(fileName)
+          droptarget.appendChild(fileDiv)
+        }
+        reader.onerror = () => {
+          switch(reader.error.code) {
+            case '1':
+              alert('未找到文件')
+              break
+            case '2':
+              alert('安全错误')
+              break
+            case '3':
+              alert('读取被中断')
+              break
+            case '4':
+              alert('文件不可读')
+              break
+            case '5':
+              alert('编码错误')
+              break
+            default: 
+              alert('文件读取失败')
+          }
+        }
+        reader.onprogress = event => {
+          console.log(`${event.loaded}/${event.total}`)
+        }
+      }
+      // 通过input框上传文件
+      fileInput.addEventListener("change", (event) => {
+        // 上传的文件都会保存到文件数组中
+        fileArr.push(event.target.files[0])
+        filesToBlod(event.target.files[0])
+      })
+      // 点击上传-单击事件-通过js触发input事件
+      function upload() {
+        fileInput.click()
+      }
+      // 拖拽上传事件
+      function handleEvent(event) {
+        // 阻止drop事件的默认行为
+        event.preventDefault();
+        if (event.type === 'drop') {
+          // 文件进入并松开鼠标,文件边框恢复正常
+          droptarget.style.borderColor = '#a89b9b'
+          for (let file of event.dataTransfer.files) {
+            // 把文件保存到文件数组中
+            fileArr.push(file)
+            // 初始化文件
+            filesToBlod(file)
+          }
+        } else if (event.type === 'dragleave') {
+          // 离开时边框恢复
+          droptarget.style.borderColor = '#a89b9b'
+        } else {
+          // 进入边框变为红色
+          droptarget.style.borderColor = 'red'
+        }
+      }
+      // 拖拽事件绑定
+      droptarget.addEventListener("dragenter", handleEvent);
+      droptarget.addEventListener("dragover", handleEvent);
+      droptarget.addEventListener("drop", handleEvent);
+      droptarget.addEventListener("dragleave", handleEvent);
+    </script>
+  </body>
+</html>
